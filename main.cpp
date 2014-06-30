@@ -4,6 +4,7 @@
 #include <sstream>
 #include <vector>
 #include <algorithm>
+#include <time.h>
 
 using namespace std;
 
@@ -42,11 +43,30 @@ public:
     couple_id = -1;
   }
 
+  void setCoupleId(int coupleId){
+    couple_id = coupleId;
+  }
   //Receives the ID of the bride, and the marriageMatrix
-  void marry (int someone_id, vector< vector<bool> >& marriageMatrix)
+  //No changes in Man instances here
+  void marry(Man& girl, vector< vector<bool> >& marriageMatrix)
   {
-    marriageMatrix[id - 1][someone_id - 1] = true;
-    marriageMatrix[someone_id - 1][id - 1] = true;
+    //Set the matrix
+    marriageMatrix[id - 1][girl.getId() - 1] = true;
+    marriageMatrix[girl.getId() - 1][id - 1] = true;
+    //Set couple_id field
+    setCoupleId(girl.getId());
+    girl.setCoupleId(id);
+  }
+
+  //Receives the wife and performs the divorce operation, for both.
+  void unmarry(Man& girl ,vector< vector<bool> >& marriageMatrix)
+  {
+    //Divorce inside the matrix
+    marriageMatrix[id -1][girl.getId() - 1] = false;
+    marriageMatrix[girl.getId() - 1][id -1] = false;
+    //Set couple_id field
+    couple_id = -1;
+    girl.couple_id = -1;
   }
 
   //Removes the element in index position and updates accordingly
@@ -57,6 +77,54 @@ public:
     prefs = updated_prefs;
   }
 
+  //Returns whether a person prefers Man A over current couple
+  bool prefersNewGuy(Man newGuy, vector< vector<string> > originalPrefs, vector< vector<bool> > marriageMatrix){
+    //Necesito el id de la pareja actual idA
+    //Debo comparar la posicion que ocupa idA frente a la posicion que ocupa otherPersonId
+    //en la lista de preferencia original
+    //POR lo tanto necesito la lista original sin eliminaciones, solo verla no modificarla
+    if(newGuy.getId() == couple_id) {
+      cout << "Uhmm...she's already married to that guy." << endl;
+      return false;
+    }
+    else {
+      string currentPartnerId = to_string(couple_id);
+      string newGuyId = to_string(newGuy.getId());
+      int currentPartnerPosition, newGuyPosition;
+      for (int i = 0; i < originalPrefs.size(); i++)
+      {
+        //TODO: Manage vectors with more than one element in this comparison
+        if(originalPrefs[i][0].compare(currentPartnerId) == 0) {
+          currentPartnerPosition = i;
+        }
+        else if(originalPrefs[i][0].compare(newGuyId) == 0) {
+          newGuyPosition = i;
+        }
+      }
+      //ATTENTION We must compare minus. Zero should be bigger for us!
+      if (newGuyPosition < currentPartnerPosition)
+      {
+        //Prefiere al actual
+        return true;
+      }
+      else
+      {
+        return false;
+      }
+    }
+  }
+
+  //Returns whether a person still has women to propose to
+  bool stillHasToPropose(){
+    if (getPreferences().empty())
+    {
+      return false;
+    }
+    else
+    {
+      return true;
+    }
+  }
   //Returns the front element of the vector, and updates accordingly
   vector<string> getFirstPreferenceAndRemove(){
     vector< vector<string>> updated_prefs = prefs;
@@ -69,17 +137,24 @@ public:
   //getters
   vector< vector<string> > getPreferences () { return prefs; }
   int getId () { return id; }
-  bool isSingle (vector< vector<bool> > marriageMatrix) 
+  bool isSingle () 
   { 
+    //ARGUMENT = vector< vector<bool> > marriageMatrix
     //If the whole id row is false, then IT IS single
-    for (int i = 0; i < marriageMatrix[id - 1].size(); i++)
-    {
-      if (marriageMatrix[id - 1][i])
-      {
-        return false;
-      }
+    // for (int i = 0; i < marriageMatrix[id - 1].size(); i++)
+    // {
+    //   if (marriageMatrix[id - 1][i])
+    //   {
+    //     return false;
+    //   }
+    // }
+    // return true;
+    if(couple_id == -1) {
+      return true;
     }
-    return true;
+    else {
+      return false;
+    }
   }
   int getCoupleId () { return couple_id;}
 
@@ -233,24 +308,12 @@ void print(string asdf)
 bool notAllHaveProposed(vector<Man> men){
   for (int i = 0; i < men.size(); i++)
   {
-    vector< vector<string> > prefs = men[i].getPreferences();
-    if (!prefs.empty())
+    if (men[i].isSingle() and men[i].stillHasToPropose())
     {
       return true;
     }
   }
   return false;
-}
-
-//Returns the first Man whose preference list is non-empty
-Man firstWithNonEmptyPrefs(vector<Man> men){
-  for (int i = 0; i < men.size(); i++)
-  {
-    if (!men[i].getPreferences().empty())
-    {
-      return men[i];
-    }
-  }
 }
 
 //Prints the marriage matrix
@@ -274,11 +337,14 @@ void printMatrix(vector< vector<bool> > matrix){
 
 int main(int argc, char const *argv[])
 { 
+  // Starting the time measurement
+  const clock_t begin_time = clock();
+  
   vector< vector< vector<string> > > prefs;
   prefs = loadData(argv[1]);
   //Already have the data, safely free memory
   //TODO: free memory deleting prefs variable
-
+  cout << "prefs tiene largo de: " << prefs.size() << endl;
   vector<Man> men;
   vector<Man> women;
   //Initialize the bool matrix
@@ -298,7 +364,6 @@ int main(int argc, char const *argv[])
     women.push_back(auxiliary_woman);
   }
   //Fin construccion
-
   // men[0].remove_and_update(0);
   // cout << "No todos han propuesto:" << notAllHaveProposed(men) << endl;
 
@@ -309,41 +374,77 @@ int main(int argc, char const *argv[])
   en cada iteracion. La informacion que se necesita guardar, esto es, quien se casa con quien
   (matrimonios), quedará almacenada en la matriz de matrimonio marriageMatrix
   */
-  
-  //mientras exista al menos un hombre m que no haya propuesto a todas
+  /* Necesito guardar las listas de preferencias mofificadas!!! */
+    
+  int currentManIndex = 0;
   while(notAllHaveProposed(men)){
-    //Copia local de hombre
-    Man firstOne = firstWithNonEmptyPrefs(men);
-    cout << "nuesto campeon tiene id: " << firstOne.getId() << endl;
+    cout << "entro al while " << currentManIndex << endl;
+    //mientras exista al menos un hombre m SOLTERO que no haya propuesto a todas
+    if (!men[currentManIndex].isSingle() or !men[currentManIndex].stillHasToPropose()){
+      currentManIndex++;
+    }
+    cout << "Our champ has id: " << men[currentManIndex].getId() << endl;
     //tomar la mujer w mejor rankeada (primera) que quede en la lista de m 
     //(hacer un pop o algo del vector, de manera que desaparezca de la lista de pref)
     //TODO: Revisar si es un vector de 1 elemento o n
-    vector<string> bestGalId = firstOne.getFirstPreferenceAndRemove();
+    vector<string> bestGalId = men[currentManIndex].getFirstPreferenceAndRemove();
     //Copia local de mujer
-    Man bestGal = women[stoi(bestGalId[0]) - 1];
-    cout << "la chica tiene id: " << bestGal.getId() << endl;
+    int bestGalIndex = stoi(bestGalId[0]) - 1;
+    Man bestGal = women[bestGalIndex];
+    cout << "Girl id: " << women[bestGalIndex].getId() << endl;
 
     // si esta soltera
-    if (bestGal.isSingle(marriageMatrix))
+    if (women[bestGalIndex].isSingle())
     {
-      cout << "la chica esta soltera " << endl;
-      cout << "marriageMatrix antes del casamiento" << endl;
+      cout << "The girl is single. " << endl;
+      cout << "marriageMatrix before weeding" << endl;
       printMatrix(marriageMatrix);
       // m y w son pareja
-      firstOne.marry(stoi(bestGalId[0]), marriageMatrix);
-      cout << "marriageMatrix despues del casamiento" << endl;
+      men[currentManIndex].marry(women[bestGalIndex], marriageMatrix);
+      cout << "marriageMatrix after weeding" << endl;
       printMatrix(marriageMatrix);
     }
     else // else si w esta emparejada
-    {
+    { 
+      cout << "Estas son las preferencias de la chica id:" << women[bestGalIndex].getId() << endl;
+      cout << print_vector_vector(prefs[bestGalIndex + prefs.size()/ 2]) << endl;
+      cout << "She's married to " << women[bestGalIndex].getCoupleId() << "...";        
       // si w prefiere a m antes que a su esposo m'
-        // m y w forman pareja
+      
+      if (women[bestGalIndex].prefersNewGuy(men[currentManIndex], prefs[bestGalIndex + prefs.size()/ 2] , marriageMatrix))
+      {
+
+        cout << "she's gonna cheat the husband!!" << endl;        
         // m' ahora es soltero
-      // else w y m' siguen en pareja
-      cout << "la chica esta casada y no se quiere separar. Try harder. " << endl;
+        cout << "Loading divorce....";
+        men[women[bestGalIndex].getCoupleId() - 1].unmarry(women[bestGalIndex], marriageMatrix);
+        cout << "marriageMatrix after divorce but before weeding" << endl;
+        printMatrix(marriageMatrix);
+        cout << "Done." << endl;
+        // m y w forman pareja
+        cout << "Performing weeding..." << endl;
+        men[currentManIndex].marry(women[bestGalIndex], marriageMatrix);
+        cout << "marriageMatrix after weeding" << endl;
+        printMatrix(marriageMatrix);
+      }
+      else
+      {
+        // // else w y m' siguen en pareja
+        cout << "nope, she's gonna stay with her man." << endl;
+        // cout << "Sorry, champ. Try harder. " << endl;
+      }
     }
-    break;
+    //Avanzamos al siguiente hombre;
+    currentManIndex++;
+    if (currentManIndex == men.size())
+    {
+      currentManIndex = 0;
+    }
   }
+  // Measuring the elapsed time
+  cout << "We're done. This is the matching." << endl;
+  printMatrix(marriageMatrix);
+  cout << float( clock () - begin_time ) /  CLOCKS_PER_SEC << " seconds" << endl;
   //ALGORITMO A GRANDES RASGOS
   //mientras exista al menos un hombre m que no haya propuesto a todas
     //tomar la mujer w mejor rankeada que quede en la lista de m 
