@@ -3,6 +3,7 @@
 #include <string>
 #include <sstream>
 #include <vector>
+#include <algorithm>
 
 using namespace std;
 
@@ -14,14 +15,59 @@ class Man
   int id;
   int couple_id;
 public:
-  Man(vector< vector<string> >);
-  vector< vector<string> > preferences () { return prefs; }
-  void set_id (int);
-  void go_single ();
-  void marry (int);
+  //Constructor
+  Man(){
+    id = -1;
+    couple_id = -1;
+    vector< vector<string> > tmp;  prefs = tmp;
+  }
 
-  int get_id () { return id; }
-  bool is_single () 
+  Man(vector < vector<string> > preferences, int idSource) {
+    prefs = preferences;
+    couple_id = -1;
+    id = idSource;
+  }
+
+  //Destructor
+  ~Man(){
+  }
+
+  //setters
+  void setId (int idSource){
+    id = idSource;
+  }
+
+  void setSingle ()
+  {
+    couple_id = -1;
+  }
+
+  void marry (int someone_id)
+  {
+    couple_id = someone_id;
+  }
+
+  //Removes the element in index position and updates accordingly
+  void removeAndUpdate(int index)
+  {
+    vector< vector<string>> updated_prefs = prefs;
+    updated_prefs.erase(updated_prefs.begin() + index);
+    prefs = updated_prefs;
+  }
+
+  //Returns the front element of the vector, and updates accordingly
+  vector<string> getFirstAndRemove(){
+    vector< vector<string>> updated_prefs = prefs;
+    vector<string> front = updated_prefs.front();
+    updated_prefs.erase(updated_prefs.begin());
+    prefs = updated_prefs;
+    return front;
+  }
+
+  //getters
+  vector< vector<string> > getPreferences () { return prefs; }
+  int getId () { return id; }
+  bool isSingle () 
   { 
     if (couple_id == -1)
     {
@@ -32,25 +78,34 @@ public:
       return false;
     }
   }
-  int couple () { return couple_id;}
+  int getCoupleId () { return couple_id;}
+
+};
+//END clase Man
+
+//Codigo clase Couple
+class Couple
+{
+  Man man;
+  Man woman;
+public:
+  Couple(){
+  }
+
+  Couple(Man male, Man female)
+  {
+    man = male;
+    woman = female;
+    man.marry(woman.getId());
+    woman.marry(man.getId());
+  }
+  ~Couple(){}
+
+  Man getMan() { return man; }
+  Man getWoman() { return woman; }
 };
 
-Man::Man (vector < vector<string> > preferences) {
-  prefs = preferences;
-  couple_id = -1;
-  // single = true;
-}
-void Man::set_id (int idSource) {
-  id = idSource;
-}
-void Man::go_single () {
-  couple_id = -1;
-}
-void Man::marry (int someone_id) {
-  couple_id = someone_id;
-}
-
-// END codigo clase
+//END clase Couple
 
 string bigger_print(vector< vector< vector<string> > > tokens){
   cout << "listas de preferencia: " <<  tokens.size() << endl;
@@ -98,6 +153,30 @@ string print_vector_vector(vector< vector<string>> token){
 void print(string asdf)
 {
   cout << asdf << endl;
+}
+
+//Retorna verdadero si existe al menos un hombre que aun tenga elementos en su lista de preferencias
+bool notAllHaveProposed(vector<Man> men){
+  for (int i = 0; i < men.size(); i++)
+  {
+    vector< vector<string> > prefs = men[i].getPreferences();
+    if (!prefs.empty())
+    {
+      return true;
+    }
+  }
+  return false;
+}
+
+//Returns the first Man whose preference list is non-empty
+Man firstWithNonEmptyPrefs(vector<Man> men){
+  for (int i = 0; i < men.size(); i++)
+  {
+    if (!men[i].getPreferences().empty())
+    {
+      return men[i];
+    }
+  }
 }
 
 int main(int argc, char const *argv[])
@@ -170,37 +249,83 @@ int main(int argc, char const *argv[])
   inputFile.close();
 
   //Revisamos el vector de preferencias
-  // cout << "numero de listas: " << prefs.size() << endl;
+  cout << "numero de listas: " << prefs.size() << endl;
   // for (int i = 0; i < prefs.size(); i++)
   // {
   //   cout << i + 1 << ": " << print_vector_vector(prefs[i]) << endl;
   // }
   vector<Man> men;
+  vector<Man> women;
   
+  //Construccion de individuos
   for (int i = 0; i < prefs.size()/2; i++)
   {
-    // cout << i << endl;
-    Man auxiliary_man (prefs[i]);
-    auxiliary_man.set_id(i + 1);
+    Man auxiliary_man(prefs[i], i + 1);
     men.push_back(auxiliary_man);
   }
-  men[0].marry (5);
-  if (men[0].preferences().size() == 10)
+  for (int i = prefs.size()/2; i < prefs.size(); i++)
+  {
+    Man auxiliary_woman(prefs[i], i - prefs.size()/2 + 1);
+    women.push_back(auxiliary_woman);
+  }
+  //Fin construccion
+
+  if (men[0].getPreferences().size() == 10)
   {
 
-    cout << "Hombre " << men[0].get_id() << " tiene 10 preferencias" << endl;
+    cout << "Hombre " << men[0].getId() << " tiene 10 preferencias" << endl;
   }
   else
   {
-    cout << men[0].preferences().size() << endl;
+    cout << men[0].getPreferences().size() << endl;
   }
-  cout << men[0].is_single() << endl;
-  if (men[0].is_single())
-  {
-    cout << "soltero" << endl;
+
+  // men[0].remove_and_update(0);
+  // Couple coup(Man men[0], Man women[3]);
+
+  cout << "No todos han propuesto:" << notAllHaveProposed(men) << endl;
+  
+  //mientras exista al menos un hombre m que no haya propuesto a todas
+  while(notAllHaveProposed(men)){
+    Man firstOne = firstWithNonEmptyPrefs(men);
+    //tomar la mujer w mejor rankeada que quede en la lista de m 
+    cout << print_vector_vector(firstOne.getPreferences()) << endl;
+    //(hacer un pop o algo del vector, de manera que desaparezca de la lista de pref)
+    //TODO: Revisar si es un vector de 1 elemento o n
+    vector<string> bestGalId = firstOne.getFirstAndRemove();
+    cout << print_vector_vector(firstOne.getPreferences()) << endl;
+    cout << bestGalId[0] << endl;
+    break;
   }
-  else
-  {
-    cout << "casado con " << men[0].couple() << endl;
-  }
+  //ALGORITMO A GRANDES RASGOS
+  //mientras exista al menos un hombre m que no haya propuesto a todas
+    //tomar la mujer w mejor rankeada que quede en la lista de m 
+    //(hacer un pop o algo del vector, de manera que desaparezca de la lista de pref)
+    // si esta soltera
+      // m y w son pareja
+    // else si w esta emparejada
+      // si w prefiere a m antes que a su esposo m'
+        // m y w forman pareja
+        // m' ahora es soltero
+      // else w y m' siguen en pareja
+
+
+
+
+
+
+
+
+
+
+  // if (men[0].isSingle())
+  // {
+  //   cout << "soltero" << endl;
+  // }
+  // else
+  // {
+  //   cout << "El " << men[0].getId() << " dice que esta casado con " << men[0].getCoupleId() << endl;
+  //   cout << "Ella " << women[4].getId() << " dice que esta casada con " << women[4].getCoupleId() << endl;
+  // }
+
 }
