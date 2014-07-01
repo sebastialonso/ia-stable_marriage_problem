@@ -1,0 +1,23 @@
+SMP
+*Gale-Shapley plano
+5 personas
+0.001175 seconds
+10 personas
+0.005162 seconds
+20 personas
+0.031463 seconds
+40 personas
+0.42182 seconds
+80 personas
+2.65035 seconds
+160 personas
+16.5507 seconds
+320 personas
+159.241 seconds
+*Gale-Shapley Forward Checking
+
+SMPTI
+*Gale-Shapley Modificado Plano
+*Gale-Shapley Modificado Forward Checking
+
+
