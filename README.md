@@ -1,6 +1,6 @@
 #Compile
 ~~~
-g++ -std=c11++ gale_shapley.cpp -o gs
+g++ -std=c++11 gale_shapley.cpp -o gs
 ~~~
 #Run
 ##Run single instance
