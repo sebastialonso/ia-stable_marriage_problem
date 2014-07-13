@@ -28,10 +28,22 @@ void deleteElement(vector<int>& vector, int personId)
       vector.erase(position);
 }
 
+vector<int> join(vector<int> first, vector<int> second)
+{
+  if (second.empty())
+  {
+    return first;
+  }
+  vector<int> result;
+  result.reserve( first.size() + second.size());
+  result.insert( result.end(), first.begin(), first.end() );
+  result.insert( result.end(), second.begin(), second.end() );
+  return result;
+}
 string printPrefList(PrefList list){
   string result = "[ ";
-  if(list.size() == 1)
-    return result + " 0 ]";
+  if(list.size() == 0)
+    return result + " ]";
   else {
     for (int i = 0; i < list.size(); i++)
     {
@@ -59,7 +71,7 @@ string printVectorPrefList(vector<PrefList> list){
 void printMarriages(Couples matching){
   for (Couples::const_iterator it = matching.begin(); it != matching.end(); ++it)
   {
-      cout << "\t" << it->second << " and " << it->first << "\n";
+      cout << "\t" << it->first << " and " << it->second << "\n";
   }
 }
 
@@ -246,102 +258,71 @@ Couples galeShapley(queue<int>* bachelors, vector<PrefList> menPrefsIn, vector<P
   return couples;
 }
 
+//void fCheck(Couples& matching, vector<PrefList>& domains, int depth, int valueToDelete)
+void fCheck(vector<int>& matching, vector<PrefList>& domains, int depth, int valueToDelete)
+{
+  //Borrar el valueToDelete dominio de los hombres id > depth
+  //Depth en realidad significan las distintas listas
+  if (depth >= domains.size())
+  {
+    // cout << "maximum depth achieved: " << depth << " -> ";
+    //Queda un elemento en el vector, pedimos el front
+    cout << printPrefList(matching) << endl;
+    // cout << "-------" << endl;
+    // printMarriages(matching);
+  }
+  else
+  {
+    // cout << "Dominio antes de borrado: " << printVectorPrefList(domains) << endl;
+    for (int i = depth; i < domains.size(); i++)
+    {
+      deleteElement(domains[i], valueToDelete);
+    }
+    // cout << "Dominio despues de borrado: " << printVectorPrefList(domains) << endl;
+    for (int j = 0; j < domains[depth].size(); j++)
+    {
+      // cout << "se pierde" << endl;
+      matching.push_back(domains[depth][j]);
+      // matching[domains[depth][j]] = depth + 1;
+      
+      vector<PrefList> domainsCopy = domains;
+      fCheck(matching, domainsCopy, depth + 1, domains[depth][j]);
+      matching.pop_back();
+      // matching.erase(domains[depth][j]);
+    }
+  }
+}
+
 void forwardChecking(vector<PrefList> menPrefs, vector<PrefList> womenPrefs)
 {
-  vector<int> originBachelors;
-  vector<int> originSingleGirls;
-  int next = 0;
-  int numberOfGirls;
-
+  //Seleccionar hombre x
+  //Asignar de alguna manera una pareja
+  //A todos los hombres siguientes, eliminar de su dominio esas parejas
+  //A todos los hombres siguientes, eliminar de su dominio aquellas parejas que formen matrimonios inestables
+  //Si alguna variable queda con dominio vacio, return false
+  //Else repeat para hombre x+1
+  vector<PrefList> matrix;
+  PrefList temp;
   for (int i = 0; i < menPrefs.size(); i++)
   {
-    originBachelors.push_back(i+1);
-  }
-  for (int i = 0; i < womenPrefs.size(); i++)
-  {
-    originSingleGirls.push_back(i+1);
-  }
-
-  Couples fCheck;
-
-  for (int i = 0; i < originSingleGirls.size(); i++)
-  {
-    fCheck.clear();
-    //Realizar mismo procedimiento para cada posible pareja del primer hombre
-    //Ej
-    // 1 -> 1
-    // 1 -> 2
-    // 1 -> 3
-    // 1 -> 4
-    vector<int> bachelors = originBachelors;
-    vector<int> singleGirls = originSingleGirls;
-    
-    int boy = bachelors.front();
-    int girl = singleGirls[i];
-    int loopsNumber = bachelors.size();
-    //Primero asociamos la pareja
-    cout << "chico " << boy << " con chica " << girl << endl;
-    fCheck[girl] = boy;
-    cout << "tamaño de matching: " << fCheck.size() << endl;
-    numberOfGirls = womenPrefs.size();
-
-    //DEBEN EXISTIR LISTA DE PREFERENCIAS GLOBALES, INMUTABLES
-    //AL ELIMINAR A UN HOMBRE DE LISTA SOLTEROS Y MUJER DE LISTA DE SOLTEROS,
-    //HAY QUE BORRARLOS DE LAS LISTAS DE PREFERENCIAS TEMPORALES (EXISTEN SOLO PARA LA ACTUAL ITERACION)
-
-    //Se borran los elegidos de la lista
-    deleteElement(singleGirls, girl);
-    deleteElement(bachelors, boy);
-    while(loopsNumber >= 0) {
-      int girl = singleGirls.front();
-      int boy = bachelors.front();
-      cout << "Buscando mina para el hombre " << boy << endl;
-      //Hacerlos pareja y revisar estabilidad
-      fCheck[girl] = boy;
-      cout << "chico " << boy << " con chica " << girl << endl;
-      while(!matchingStable(fCheck, menPrefs, womenPrefs)) {
-        //Si es inestable, hay que deshacer la ultima pareja
-        //Intentar emparejar a boy con la siguiente soltera (sin eliminar a girl de la lista de solteras)
-        cout << "...MATCHING INESTABLE" << endl;
-        fCheck.erase(girl);
-        next += 1;
-        if (next == numberOfGirls - 1)
-        {
-          cout << "No hay mas chicas para intentar" << endl;
-          break;
-        }
-        girl = singleGirls[next];
-        fCheck[girl] = boy;
-        cout << "chico " << boy << " con chica " << girl << endl;
-      }
-      cout << "...MATCHING ESTABLE" << endl;
-      //La pareja hace el match estable
-      //Se mantienen casados, pero se borran de la lista de solteros
-      deleteElement(singleGirls, girl);
-      deleteElement(bachelors, boy);
-
-      // cout << "chicas ";
-      // printVector(singleGirls);
-      // cout << "solteros ";
-      // printVector(bachelors);
-      if (singleGirls.empty() or bachelors.empty())
-      {
-        break;
-      }
-      loopsNumber--;
+    temp.clear();
+    for (int j = 0; j < menPrefs[i].size(); j++)
+    {
+      temp.push_back(menPrefs[i][j]);
     }
-    cout << "Matrimonios estables:" << endl;
-    printMarriages(fCheck);
-
-    cout << "===========================" << endl;
+    matrix.push_back(temp);
   }
-  
-  // cout << "chicas ";
-  // printVector(singleGirls);
-  // cout << "solteros ";
-  // printVector(bachelors);
-  // Matchings marriages;
-  // return marriages;
+  vector<int> matching;
+  // Couples matching;
+  //Comienza el arbol, llamamos recursivamente a fCheck para cada miembro de la lista de preferencias del primer hombre
+  for (int i = 0; i < 2; i++)
+  {
+    matching.push_back(matrix[0][i]);
+    // matching[matrix[0][i]] = i + 1;
+    vector<PrefList> domainCopy = matrix;
+    fCheck(matching, domainCopy, 1, matrix[0][i]);
+    matching.clear();
+  }
 }
 
 int main(int argc, char const *argv[])
