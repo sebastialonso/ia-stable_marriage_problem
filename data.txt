@@ -1,0 +1,41 @@
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+3
+0.000128 seconds
+0.000135 seconds
+4
+0.00058 seconds
+0.000646 seconds
+5
+0.003765 seconds
+0.004185 seconds
+6
+0.025499 seconds
+0.001415 seconds
+7
+0.218347 seconds
+0.125872 seconds
+8
+2.03654 seconds
+0.546445 seconds
+9
+21.3464 seconds
+4.90598 seconds
+10
+244.423 seconds
+45.6668 seconds
+11
+3
+0.000456 seconds
+0.000245 seconds
+3
+0.000386 seconds
+0.000238 seconds
