@@ -355,6 +355,7 @@ void forwardChecking(vector<PrefList> menPrefs, vector<PrefList> womenPrefs, boo
   //Comienza el arbol, llamamos recursivamente a fCheck para cada miembro de la lista de preferencias del primer hombre
   for (int i = 0; i < matrix[0].size(); i++)
   {
+    cout << "Nodo " << i + 1 << endl;
     matching.push_back(matrix[0][i]);
     vector<PrefList> domainCopy = matrix;
     fCheck(stableMatchings, matching, domainCopy, 1, matrix[0][i], menPrefs, womenPrefs, optimize, biggestMatch);
