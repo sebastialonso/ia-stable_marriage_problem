@@ -291,8 +291,9 @@ void fCheck(vector<nCouples>& answers, nCouples& matching, vector<PrefList>& dom
     {
       biggestMatch = matching.size();
     }
-    cout << "Matching so far: " << endl;
-    cout << printPrefList(matching) << endl;
+    answers.push_back(matching);
+    // cout << "Matching so far: " << endl;
+    // cout << printPrefList(matching) << endl;
     // cout << "Estable? " << matchingStable(matching, menPrefs, womenPrefs) << endl;
   }
   else
@@ -359,7 +360,7 @@ void forwardChecking(vector<PrefList> menPrefs, vector<PrefList> womenPrefs, boo
     fCheck(stableMatchings, matching, domainCopy, 1, matrix[0][i], menPrefs, womenPrefs, optimize, biggestMatch);
     matching.clear();
   }
-  // cout << "Ciclos totales: " << numberOfCycles << endl;
+  cout << "Matchings encontrados: " << stableMatchings.size() << endl;
 }
 
 int main(int argc, char const *argv[])
