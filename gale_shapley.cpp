@@ -399,11 +399,12 @@ int main(int argc, char const *argv[])
   // forwardChecking(menPrefs, womenPrefs, 0, biggestMatch);
   // data << "Ciclos sin optimizacion (revisar ramas inestables): " << endl;
   // data << float( clock () - unoptimized_begin_time ) /  CLOCKS_PER_SEC << " seconds" << endl;
-  cout << float( clock () - unoptimized_begin_time ) /  CLOCKS_PER_SEC << " seconds" << endl;
+  
 
   // const clock_t optimized_begin_time = clock();
   // cout << "Ciclos con optimizacion (Ignorar ramas inestables): " << endl;
   forwardChecking(menPrefs, womenPrefs, 1, biggestMatch);
+  cout << float( clock () - unoptimized_begin_time ) /  CLOCKS_PER_SEC << " seconds" << endl;
   // data << "Ciclos con optimizacion (Ignorar ramas inestables): " << endl;
   // data << float( clock () - optimized_begin_time ) /  CLOCKS_PER_SEC << " seconds" << endl;
   // cout << float( clock () - optimized_begin_time ) /  CLOCKS_PER_SEC << " seconds" << endl;
