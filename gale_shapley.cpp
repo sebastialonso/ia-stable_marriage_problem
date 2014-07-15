@@ -283,7 +283,7 @@ Couples galeShapley(queue<int>* bachelors, vector<PrefList> menPrefsIn, vector<P
 }
 
 //void fCheck(Couples& matching, vector<PrefList>& domains, int depth, int valueToDelete)
-void fCheck(int& numberStableMatching, nCouples& matching, vector<PrefList>& domains, int depth, int valueToDelete, vector<PrefList> menPrefs, vector<PrefList> womenPrefs, bool optimize, int& biggestMatch)
+void fCheck(long long& numberStableMatching, nCouples& matching, vector<PrefList>& domains, int depth, int valueToDelete, vector<PrefList> menPrefs, vector<PrefList> womenPrefs, bool optimize, int& biggestMatch)
 {
   if (depth >= domains.size())
   {
@@ -352,7 +352,7 @@ void forwardChecking(vector<PrefList> menPrefs, vector<PrefList> womenPrefs, boo
 
   nCouples matching;
   // vector<nCouples> stableMatchings;
-  int numberStableMatching = 0;
+  long long numberStableMatching = 0;
   //Comienza el arbol, llamamos recursivamente a fCheck para cada miembro de la lista de preferencias del primer hombre
   for (int i = 0; i < matrix[0].size(); i++)
   {
