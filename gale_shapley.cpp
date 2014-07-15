@@ -283,7 +283,7 @@ Couples galeShapley(queue<int>* bachelors, vector<PrefList> menPrefsIn, vector<P
 }
 
 //void fCheck(Couples& matching, vector<PrefList>& domains, int depth, int valueToDelete)
-void fCheck(vector<nCouples>& answers, nCouples& matching, vector<PrefList>& domains, int depth, int valueToDelete, vector<PrefList> menPrefs, vector<PrefList> womenPrefs, bool optimize, int& biggestMatch)
+void fCheck(int& numberStableMatching, nCouples& matching, vector<PrefList>& domains, int depth, int valueToDelete, vector<PrefList> menPrefs, vector<PrefList> womenPrefs, bool optimize, int& biggestMatch)
 {
   if (depth >= domains.size())
   {
@@ -291,7 +291,7 @@ void fCheck(vector<nCouples>& answers, nCouples& matching, vector<PrefList>& dom
     {
       biggestMatch = matching.size();
     }
-    answers.push_back(matching);
+    numberStableMatching++;
     // cout << "Matching so far: " << endl;
     // cout << printPrefList(matching) << endl;
     // cout << "Estable? " << matchingStable(matching, menPrefs, womenPrefs) << endl;
@@ -311,7 +311,7 @@ void fCheck(vector<nCouples>& answers, nCouples& matching, vector<PrefList>& dom
         if (matchingStable(matching, menPrefs, womenPrefs))
         {
           vector<PrefList> domainsCopy = domains;
-          fCheck(answers, matching, domainsCopy, depth + 1, domains[depth][j], menPrefs, womenPrefs, optimize, biggestMatch);
+          fCheck(numberStableMatching, matching, domainsCopy, depth + 1, domains[depth][j], menPrefs, womenPrefs, optimize, biggestMatch);
           matching.pop_back();
         }
         else
@@ -322,7 +322,7 @@ void fCheck(vector<nCouples>& answers, nCouples& matching, vector<PrefList>& dom
       else
       {
         vector<PrefList> domainsCopy = domains;
-        fCheck(answers, matching, domainsCopy, depth + 1, domains[depth][j], menPrefs, womenPrefs, optimize, biggestMatch);
+        fCheck(numberStableMatching, matching, domainsCopy, depth + 1, domains[depth][j], menPrefs, womenPrefs, optimize, biggestMatch);
         matching.pop_back();
       }
     }
@@ -351,17 +351,18 @@ void forwardChecking(vector<PrefList> menPrefs, vector<PrefList> womenPrefs, boo
   }
 
   nCouples matching;
-  vector<nCouples> stableMatchings;
+  // vector<nCouples> stableMatchings;
+  int numberStableMatching = 0;
   //Comienza el arbol, llamamos recursivamente a fCheck para cada miembro de la lista de preferencias del primer hombre
   for (int i = 0; i < matrix[0].size(); i++)
   {
     cout << "Nodo " << i + 1 << endl;
     matching.push_back(matrix[0][i]);
     vector<PrefList> domainCopy = matrix;
-    fCheck(stableMatchings, matching, domainCopy, 1, matrix[0][i], menPrefs, womenPrefs, optimize, biggestMatch);
+    fCheck(numberStableMatching, matching, domainCopy, 1, matrix[0][i], menPrefs, womenPrefs, optimize, biggestMatch);
     matching.clear();
   }
-  cout << "Matchings encontrados: " << stableMatchings.size() << endl;
+  cout << "Matchings encontrados: " << numberStableMatching << endl;
 }
 
 int main(int argc, char const *argv[])
