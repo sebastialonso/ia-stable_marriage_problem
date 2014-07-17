@@ -1,0 +1,11 @@
+InstanceSmti-10-0.5-0.txt 7 0.510916 real 0m0.516s user 0m0.512s sys 0m0.002s
+InstanceSmti-11-0.5-0.txt 10 3.65199 real 0m3.660s user 0m3.649s sys 0m0.006s
+InstanceSmti-12-0.5-0.txt 11 9.47602 real 0m9.512s user 0m9.448s sys 0m0.033s
+InstanceSmti-13-0.5-0.txt 3 85.2695 real 1m25.553s user 1m25.094s sys 0m0.181s
+InstanceSmti-3-0.5-0.txt 3 6.5e-05 real 0m0.005s user 0m0.002s sys 0m0.001s
+InstanceSmti-4-0.5-0.txt 2 0.000144 real 0m0.003s user 0m0.002s sys 0m0.001s
+InstanceSmti-5-0.5-0.txt 5 0.00075 real 0m0.004s user 0m0.002s sys 0m0.001s
+InstanceSmti-6-0.5-0.txt 4 0.000945 real 0m0.004s user 0m0.003s sys 0m0.001s
+InstanceSmti-7-0.5-0.txt 2 0.000527 real 0m0.003s user 0m0.002s sys 0m0.001s
+InstanceSmti-8-0.5-0.txt 6 0.006787 real 0m0.030s user 0m0.009s sys 0m0.001s
+InstanceSmti-9-0.5-0.txt 4 0.010887 real 0m0.028s user 0m0.012s sys 0m0.001s

@@ -283,12 +283,14 @@ Couples galeShapley(queue<int>* bachelors, vector<PrefList> menPrefsIn, vector<P
 }
 
 //void fCheck(Couples& matching, vector<PrefList>& domains, int depth, int valueToDelete)
-void fCheck(long long& numberStableMatching, nCouples& matching, vector<PrefList>& domains, int depth, int valueToDelete, vector<PrefList> menPrefs, vector<PrefList> womenPrefs, bool optimize, int& biggestMatch)
+void fCheck(long long& numberStableMatching, nCouples& matching, vector<PrefList>& domains, int depth, int valueToDelete, vector<PrefList> menPrefs, vector<PrefList> womenPrefs, int& biggestMatch)
 {
+  //Si se llega al maximo nivel de profundidad
   if (depth >= domains.size())
   {
     if (biggestMatch < matching.size())
     {
+      // cout << "max depth reached" << endl;
       biggestMatch = matching.size();
     }
     numberStableMatching++;
@@ -306,23 +308,23 @@ void fCheck(long long& numberStableMatching, nCouples& matching, vector<PrefList
     for (int j = 0; j < domains[depth].size(); j++)
     {
       matching.push_back(domains[depth][j]);
-      if (optimize)
+      // cout << "Matching so far: " << endl;
+      // cout << printPrefList(matching) << endl;
+      // cout << "Estable? " << matchingStable(matching, menPrefs, womenPrefs) << endl;
+      if (matchingStable(matching, menPrefs, womenPrefs))
       {
-        if (matchingStable(matching, menPrefs, womenPrefs))
-        {
-          vector<PrefList> domainsCopy = domains;
-          fCheck(numberStableMatching, matching, domainsCopy, depth + 1, domains[depth][j], menPrefs, womenPrefs, optimize, biggestMatch);
-          matching.pop_back();
-        }
-        else
-        {
-          matching.pop_back();
-        }
+        /* Dado que no es necesario llegar hasta la maxima profundidad del arbol para encontrar un matching maximal estable,
+        registramos este matching parcial
+        */
+        biggestMatch = matching.size();
+        numberStableMatching++;
+
+        vector<PrefList> domainsCopy = domains;
+        fCheck(numberStableMatching, matching, domainsCopy, depth + 1, domains[depth][j], menPrefs, womenPrefs, biggestMatch);
+        matching.pop_back();
       }
       else
       {
-        vector<PrefList> domainsCopy = domains;
-        fCheck(numberStableMatching, matching, domainsCopy, depth + 1, domains[depth][j], menPrefs, womenPrefs, optimize, biggestMatch);
         matching.pop_back();
       }
     }
@@ -335,7 +337,7 @@ void fCheck(long long& numberStableMatching, nCouples& matching, vector<PrefList
 //A todos los hombres siguientes, eliminar de su dominio aquellas parejas que formen matrimonios inestables
 //Si alguna variable queda con dominio vacio, return false
 //Else repeat para hombre x+1
-void forwardChecking(vector<PrefList> menPrefs, vector<PrefList> womenPrefs, bool optimize, int& biggestMatch)
+void forwardChecking(vector<PrefList> menPrefs, vector<PrefList> womenPrefs, int& biggestMatch)
 {
   vector<PrefList> matrix;
   PrefList temp;
@@ -356,13 +358,13 @@ void forwardChecking(vector<PrefList> menPrefs, vector<PrefList> womenPrefs, boo
   //Comienza el arbol, llamamos recursivamente a fCheck para cada miembro de la lista de preferencias del primer hombre
   for (int i = 0; i < matrix[0].size(); i++)
   {
-    cout << "Nodo " << i + 1 << endl;
+    // cout << "Nodo " << i + 1 << endl;
     matching.push_back(matrix[0][i]);
     vector<PrefList> domainCopy = matrix;
-    fCheck(numberStableMatching, matching, domainCopy, 1, matrix[0][i], menPrefs, womenPrefs, optimize, biggestMatch);
+    fCheck(numberStableMatching, matching, domainCopy, 1, matrix[0][i], menPrefs, womenPrefs, biggestMatch);
     matching.clear();
   }
-  cout << "Matchings encontrados: " << numberStableMatching << endl;
+  // cout << "Matchings encontrados: " << numberStableMatching << endl;
 }
 
 int main(int argc, char const *argv[])
@@ -371,16 +373,12 @@ int main(int argc, char const *argv[])
   vector< PrefList > prefs;
   vector <PrefList> menPrefs;
   vector <PrefList> womenPrefs;
-  queue<int> bachelors;
-  Couples couples;
 
   int biggestMatch = 0;
   prefs = loadData(argv[1]);
   for (int i = 0; i < prefs.size()/2; i++)
   {
     menPrefs.push_back(prefs[i]);
-    //Fill the bachelors
-    bachelors.push(i+1);
   }
   for (int i = prefs.size()/2; i < prefs.size(); i++)
   {
@@ -389,6 +387,8 @@ int main(int argc, char const *argv[])
 
   /* ORIGINAL GALE & SHAPLEY Algorithm
 
+  queue<int> bachelors;
+  Couples couples;
   couples = galeShapley(&bachelors, menPrefs, womenPrefs);
   printMarriages(couples);
 
@@ -396,24 +396,13 @@ int main(int argc, char const *argv[])
 
   // data.open("data.txt", std::ios_base::app);
   // data << menPrefs.size() << endl;
-  
-  const clock_t unoptimized_begin_time = clock();
-  // forwardChecking(menPrefs, womenPrefs, 0, biggestMatch);
-  // data << "Ciclos sin optimizacion (revisar ramas inestables): " << endl;
-  // data << float( clock () - unoptimized_begin_time ) /  CLOCKS_PER_SEC << " seconds" << endl;
-  
-
-  // const clock_t optimized_begin_time = clock();
-  // cout << "Ciclos con optimizacion (Ignorar ramas inestables): " << endl;
-  forwardChecking(menPrefs, womenPrefs, 1, biggestMatch);
-  cout << float( clock () - unoptimized_begin_time ) /  CLOCKS_PER_SEC << " seconds" << endl;
+  const clock_t optimized_begin_time = clock();
+  forwardChecking(menPrefs, womenPrefs, biggestMatch);
   // data << "Ciclos con optimizacion (Ignorar ramas inestables): " << endl;
   // data << float( clock () - optimized_begin_time ) /  CLOCKS_PER_SEC << " seconds" << endl;
-  // cout << float( clock () - optimized_begin_time ) /  CLOCKS_PER_SEC << " seconds" << endl;
+  float elapsed_time = float( clock () - optimized_begin_time ) /  CLOCKS_PER_SEC;
   // data.close();
-  cout << "Tamaño de matching maximal: " << biggestMatch << endl;
-  
-  // cout << couples.size() << endl;
+  cout << biggestMatch << " " << elapsed_time << endl;
   
   return 0;
 }

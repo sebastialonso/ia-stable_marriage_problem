@@ -1,5 +1,5 @@
 #!/bin/bash
-instancia="instancias"
+instancia="instanciasSMI"
 #instancia="Set_21_234"
 #instancia="Set_32_234"
 #instancia="Set_33_234"
