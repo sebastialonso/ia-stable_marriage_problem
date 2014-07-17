@@ -217,35 +217,37 @@ bool matchingStable(vector<int> matching, vector<PrefList> menPrefs, vector<Pref
   }
 }
 
-//Forces node consistency on the preferences lists, that is, if some person p of sex A has an empty
-//preference list, then p is deleted from all the preferences list of people from sex B
-void nodeConsistency(vector< PrefList >& menPrefs, vector< PrefList>& womenPrefs)
+vector<vector<PrefList>> arcConsistency(vector<PrefList> menPrefs, vector<PrefList> womenPrefs)
 {
-  //Si persona p tiene lista vacia, eliminar toda referencia a persona p
+  vector<vector<PrefList>> consistentPrefLists;
+  vector<PrefList> menPrefsCopy = menPrefs;
+  vector<PrefList> womenPrefsCopy = womenPrefs;
+
   for(int i = 0; i < menPrefs.size(); i++) {
-    //Detecta el hombre de la lista vacia
-    if (menPrefs[i].empty())
+    if (!menPrefs[i].empty())
     {
-      int menToDelete = i+1;
-      for(int j = 0; j < womenPrefs.size(); j++) {
-        PrefList::iterator position = find(womenPrefs[j].begin(), womenPrefs[j].end(), menToDelete);
-        if (position != womenPrefs[j].end()) // == vector.end() means the element was not found
-            womenPrefs[j].erase(position);
+      cout << printPrefList(menPrefs[i]) << endl;
+      for (int j = 0; j < menPrefs[i].size(); j++)
+      {
+        cout << "Existe hombre " <<  i + 1 << " en la lista de mujer " << menPrefs[i][j] << " ~> " << printPrefList(womenPrefs[menPrefs[i][j] - 1]) << endl;
+        if (find(womenPrefs[menPrefs[i][j] - 1].begin(), womenPrefs[menPrefs[i][j] - 1].end(), i + 1) == womenPrefs[menPrefs[i][j] - 1].end())
+        {
+          cout << i + 1 << " no aparece  en la lista de " << j + 1 << endl;
+          cout << "Borramos a " << j + 1 << " de la lista de " << i +1 << endl;
+          /* no forman par aceptable */
+          /* borrar mujer j (valor j + 1) de la lista i (del hombre i + 1) */
+          deleteElement(menPrefsCopy[i], j + 1);
+        }
+        else
+        {
+          cout << "Si aparece, todo bien" << endl;
+        }
       }
     }
   }
-  for(int i = 0; i < womenPrefs.size(); i++) {
-    //Detecta el hombre de la lista vacia
-    if (womenPrefs[i].empty())
-    {
-      int menToDelete = i+1;
-      for(int j = 0; j < menPrefs.size(); j++) {
-        PrefList::iterator position = find(menPrefs[j].begin(), menPrefs[j].end(), menToDelete);
-        if (position != menPrefs[j].end()) // == vector.end() means the element was not found
-            menPrefs[j].erase(position);
-      }
-    }
-  }
+  consistentPrefLists.push_back(menPrefsCopy);
+  consistentPrefLists.push_back(womenPrefsCopy);
+  return consistentPrefLists;
 }
 
 //Performs the Gale & Shapley algorithm, returns a stable Matching
@@ -290,13 +292,9 @@ void fCheck(long long& numberStableMatching, nCouples& matching, vector<PrefList
   {
     if (biggestMatch < matching.size())
     {
-      // cout << "max depth reached" << endl;
       biggestMatch = matching.size();
     }
     numberStableMatching++;
-    // cout << "Matching so far: " << endl;
-    // cout << printPrefList(matching) << endl;
-    // cout << "Estable? " << matchingStable(matching, menPrefs, womenPrefs) << endl;
   }
   else
   {
@@ -308,9 +306,6 @@ void fCheck(long long& numberStableMatching, nCouples& matching, vector<PrefList
     for (int j = 0; j < domains[depth].size(); j++)
     {
       matching.push_back(domains[depth][j]);
-      // cout << "Matching so far: " << endl;
-      // cout << printPrefList(matching) << endl;
-      // cout << "Estable? " << matchingStable(matching, menPrefs, womenPrefs) << endl;
       if (matchingStable(matching, menPrefs, womenPrefs))
       {
         /* Dado que no es necesario llegar hasta la maxima profundidad del arbol para encontrar un matching maximal estable,
@@ -331,12 +326,6 @@ void fCheck(long long& numberStableMatching, nCouples& matching, vector<PrefList
   }
 }
 
-//Seleccionar hombre x del total de hombres
-//Asignar de alguna manera una pareja
-//A todos los hombres siguientes, eliminar de su dominio esas parejas
-//A todos los hombres siguientes, eliminar de su dominio aquellas parejas que formen matrimonios inestables
-//Si alguna variable queda con dominio vacio, return false
-//Else repeat para hombre x+1
 void forwardChecking(vector<PrefList> menPrefs, vector<PrefList> womenPrefs, int& biggestMatch)
 {
   vector<PrefList> matrix;
@@ -369,7 +358,6 @@ void forwardChecking(vector<PrefList> menPrefs, vector<PrefList> womenPrefs, int
 
 int main(int argc, char const *argv[])
 {
-  ofstream data;
   vector< PrefList > prefs;
   vector <PrefList> menPrefs;
   vector <PrefList> womenPrefs;
@@ -394,14 +382,22 @@ int main(int argc, char const *argv[])
 
   */
 
-  // data.open("data.txt", std::ios_base::app);
-  // data << menPrefs.size() << endl;
+  // const clock_t optimized_begin_time = clock();
+  // forwardChecking(menPrefs, womenPrefs, biggestMatch);
+  // float elapsed_time = float( clock () - optimized_begin_time ) /  CLOCKS_PER_SEC;
+  // cout << biggestMatch << " " << elapsed_time << endl;
+
+  // biggestMatch = 0;
+
   const clock_t optimized_begin_time = clock();
-  forwardChecking(menPrefs, womenPrefs, biggestMatch);
-  // data << "Ciclos con optimizacion (Ignorar ramas inestables): " << endl;
-  // data << float( clock () - optimized_begin_time ) /  CLOCKS_PER_SEC << " seconds" << endl;
+  vector<vector<PrefList>> consistentLists = arcConsistency(menPrefs, womenPrefs);
+
+  // forwardChecking(consistentPrefLists[0], consistentPrefLists[1], biggestMatch);  
+  cout << "Nueva lista de hombres" << endl;
+  cout << printVectorPrefList(consistentLists[0]) << endl;
+  cout << "Nueva lista de mujeres" << endl;
+  cout << printVectorPrefList(consistentLists[1]) << endl;
   float elapsed_time = float( clock () - optimized_begin_time ) /  CLOCKS_PER_SEC;
-  // data.close();
   cout << biggestMatch << " " << elapsed_time << endl;
   
   return 0;
