@@ -120,7 +120,6 @@ vector< PrefList > loadData(char const filename[]){
               {
                 //Se encontro el final del empate. Limpiamos aux para lo que venga
                 // y agregamos el empate a la lista de pref.
-                // indiv_prefs.push_back(to_int(value));
                 break;
               }
               else 
@@ -383,23 +382,10 @@ int main(int argc, char const *argv[])
 
   */
 
-  // const clock_t optimized_begin_time = clock();
-  // forwardChecking(menPrefs, womenPrefs, biggestMatch);
-  // float elapsed_time = float( clock () - optimized_begin_time ) /  CLOCKS_PER_SEC;
-  // cout << biggestMatch << " " << elapsed_time << endl;
-
-  // biggestMatch = 0;
-  cout << printVectorPrefList(prefs) << endl;
-  // const clock_t optimized_begin_time = clock();
-  // vector<vector<PrefList>> consistentLists = arcConsistency(menPrefs, womenPrefs);
-
-  // // forwardChecking(consistentPrefLists[0], consistentPrefLists[1], biggestMatch);  
-  // cout << "Nueva lista de hombres" << endl;
-  // cout << printVectorPrefList(consistentLists[0]) << endl;
-  // cout << "Nueva lista de mujeres" << endl;
-  // cout << printVectorPrefList(consistentLists[1]) << endl;
-  // float elapsed_time = float( clock () - optimized_begin_time ) /  CLOCKS_PER_SEC;
-  // cout << biggestMatch << " " << elapsed_time << endl;
+  const clock_t optimized_begin_time = clock();
+  forwardChecking(menPrefs, womenPrefs, biggestMatch);
+  float elapsed_time = float( clock () - optimized_begin_time ) /  CLOCKS_PER_SEC;
+  cout << biggestMatch << " " << elapsed_time << endl;
   
   return 0;
 }
